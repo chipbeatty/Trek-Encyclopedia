@@ -11,3 +11,4 @@ wheels/
 
 embeddings.json
 .env
+data/
