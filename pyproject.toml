@@ -12,4 +12,5 @@ dependencies = [
     "openai>=2.29.0",
     "pandas>=3.0.1",
     "python-dotenv>=1.2.2",
+    "tiktoken>=0.12.0",
 ]
