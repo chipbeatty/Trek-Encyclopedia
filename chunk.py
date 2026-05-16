@@ -19,6 +19,7 @@ Usage:
 """
 
 import argparse
+import csv
 import json
 import re
 from dataclasses import dataclass, asdict
@@ -104,7 +105,45 @@ class Chunk:
 # ---------------------------------------------------------------------------
 
 
-def chunk_episode(ep: dict, chunk_size: int, overlap: int) -> list[Chunk]:
+_TITLE_ALIASES: dict[str, str] = {
+    # Chakoteya marks these "Part One/1" but the CSV lists them without a part suffix
+    "the best of both worlds 1": "the best of both worlds",
+    "times arrow 1": "times arrow",
+}
+
+
+def _normalize_title(title: str) -> str:
+    """Normalize a title for fuzzy matching across Chakoteya / TVMaze inconsistencies."""
+    title = re.sub(r"^the next generation transcripts\s*-\s*", "", title, flags=re.IGNORECASE)
+    title = re.sub(r"\s+", " ", title).strip().lower()
+    title = title.replace("honour", "honor")
+    title = re.sub(r"\.+\s*\(\d\)\s*$", "", title)   # "All Good Things... (1)"
+    title = re.sub(r"[''`]", "", title)               # apostrophes
+    title = re.sub(r"[,.\-]", " ", title)             # punctuation → space
+    title = re.sub(r"\bpart\s+one\b", "part 1", title)
+    title = re.sub(r"\bpart\s+two\b", "part 2", title)
+    title = re.sub(r"\bpart\s+ii\b", "part 2", title)
+    title = re.sub(r"\bpart\s+i\b", "part 1", title)
+    title = re.sub(r"\bii\b", "2", title)             # "Redemption II" → "Redemption 2"
+    title = re.sub(r"\bi\b", "1", title)              # "Unification I" → "Unification 1"
+    title = re.sub(r"\bpart\b", "", title)            # strip "part" to unify "X Part 1" with "X 1"
+    return re.sub(r"\s+", " ", title).strip()
+
+
+def load_episode_metadata(csv_path: Path) -> dict[str, dict]:
+    """Load season/episode numbers from tng_episodes.csv, keyed by normalised title."""
+    if not csv_path.exists():
+        return {}
+    lookup: dict[str, dict] = {}
+    with csv_path.open(newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            key = _normalize_title(row["title"])
+            if key not in lookup:
+                lookup[key] = {"season": int(row["season"]), "number": int(row["episode"])}
+    return lookup
+
+
+def chunk_episode(ep: dict, chunk_size: int, overlap: int, meta_lookup: dict[str, dict] | None = None) -> list[Chunk]:
     """
     Produce overlapping chunks for one episode.
 
@@ -116,8 +155,13 @@ def chunk_episode(ep: dict, chunk_size: int, overlap: int) -> list[Chunk]:
        the raw transcript field.
     """
     title = ep.get("name") or ep.get("title", "Unknown")
-    season = ep.get("season", 0)
-    number = ep.get("number", 0)
+    csv_meta: dict = {}
+    if meta_lookup:
+        norm = _normalize_title(title)
+        norm = _TITLE_ALIASES.get(norm, norm)
+        csv_meta = meta_lookup.get(norm, {})
+    season = ep.get("season") or csv_meta.get("season", 0)
+    number = ep.get("number") or csv_meta.get("number", 0)
     stardate = ep.get("stardate", "")
     airdate = ep.get("airdate") or ep.get("airdate", "")
     episode_id = f"s{season:02d}e{number:02d}"
@@ -270,6 +314,8 @@ def main():
     parser = argparse.ArgumentParser(description="Chunk TNG transcripts for RAG")
     parser.add_argument("--in", dest="input", default="data/transcripts.json")
     parser.add_argument("--out", default="data/chunks.json")
+    parser.add_argument("--episodes", default="data/tng_episodes.csv",
+                        help="CSV with season/episode numbers to enrich transcript metadata")
     parser.add_argument(
         "--size", type=int, default=500, help="Chunk size in tokens (default: 500)"
     )
@@ -290,6 +336,8 @@ def main():
     if not in_path.exists():
         raise FileNotFoundError(f"Input file not found: {in_path}")
 
+    meta_lookup = load_episode_metadata(Path(args.episodes))
+
     print(f"Loading transcripts from {in_path}…")
     with in_path.open() as f:
         episodes: list[dict] = json.load(f)
@@ -299,7 +347,7 @@ def main():
     all_chunks: list[Chunk] = []
     for ep in episodes:
         title = ep.get("name") or ep.get("title", "?")
-        ep_chunks = chunk_episode(ep, args.size, args.overlap)
+        ep_chunks = chunk_episode(ep, args.size, args.overlap, meta_lookup)
         all_chunks.extend(ep_chunks)
         print(f"  {title:45s}  {len(ep_chunks):3d} chunks")
 
