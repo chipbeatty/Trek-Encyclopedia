@@ -18,16 +18,22 @@ uv run python scrape_transcripts.py              # fetch full transcripts from C
 uv run python scrape_transcripts.py --limit 5   # test run with 5 episodes
 uv run python scrape_transcripts.py --delay 2.0 # be polite to the server
 
+# Scene fix (run once after any scrape, before chunking)
+uv run python fix_scenes.py                      # re-extract scene locations from existing transcripts.json
+
 # Chunking
 uv run python chunk.py                           # chunk transcripts → data/chunks.json
 uv run python chunk.py --stats                  # print stats without writing
 uv run python chunk.py --size 500 --overlap 50  # tune chunk parameters
 
-# Embedding (early prototype — embeds episode synopses, not chunks)
-uv run python embed.py                           # embed episodes → data/embeddings.json
+# Embedding — writes to ChromaDB at data/chroma/
+uv run python embed.py                           # embed chunks from chunks.json into ChromaDB
+
+# If re-chunking after a change, clear ChromaDB first to avoid stale chunks:
+# python -c "import chromadb; chromadb.PersistentClient('data/chroma').delete_collection('tng_transcripts')"
 
 # Search / RAG
-uv run python search.py                          # run test semantic searches
+uv run python search.py                          # run test semantic searches against ChromaDB
 uv run python rag.py                             # run test RAG queries
 uv run python main.py                            # interactive CLI chatbot
 
@@ -40,12 +46,15 @@ uv add <package>
 The pipeline runs in discrete stages, each producing a file consumed by the next:
 
 ```
-scrape.py          → data/tng_episodes.csv      (episode metadata from TVMaze API)
-scrape_transcripts.py → data/transcripts.json   (full transcripts from Chakoteya, merged with TVMaze metadata)
-chunk.py           → data/chunks.json           (overlapping token-window chunks with scene metadata)
-embed.py           → data/embeddings.json       (embeddings — currently embeds synopses, not chunks)
-search.py / rag.py / main.py                    (retrieval and generation layer)
+scrape.py             → data/tng_episodes.csv    (episode metadata from TVMaze API)
+scrape_transcripts.py → data/transcripts.json    (full transcripts from Chakoteya, merged with TVMaze metadata)
+fix_scenes.py         → data/transcripts.json    (re-extracts scene locations in-place, no re-scraping needed)
+chunk.py              → data/chunks.json         (scene-aware overlapping token-window chunks)
+embed.py              → data/chroma/             (ChromaDB collection: tng_transcripts, 6,894 chunks)
+search.py / rag.py / main.py                     (retrieval and generation layer)
 ```
+
+**Important:** `embed.py` resumes by skipping chunk IDs already in ChromaDB. If you re-run `chunk.py` (which regenerates chunk IDs), delete the collection first or stale UNKNOWN-location chunks will persist alongside new ones.
 
 ### Data Sources
 
@@ -60,16 +69,13 @@ Each `Chunk` carries full episode metadata (`title`, `season`, `episode`, `stard
 
 ### Current State
 
-- **Done**: TVMaze scrape, Chakoteya transcript scrape, scene-splitting, token chunking
-- **Prototype (not yet connected to chunks)**: `embed.py` embeds per-episode synopses from the old CSV; `search.py` and `rag.py` do cosine similarity over those synopsis embeddings
-- **Next**: embed `data/chunks.json` with `text-embedding-3-small`, load into ChromaDB, update `search.py` and `rag.py` to query ChromaDB instead of the flat JSON
+- **Done**: TVMaze scrape, Chakoteya transcript scrape, scene splitting (Title Case fix applied via `fix_scenes.py`), token chunking, ChromaDB embedding (6,894 chunks), semantic search and RAG over real transcript text
+- **Remaining**: conversation history, evaluation
 
 ### Remaining Pipeline Steps
 
-1. **Embedding chunks** — call `text-embedding-3-small` on each chunk's `text` field from `chunks.json`; estimated cost in `chunk.py --stats`
-2. **Vector DB** — load chunk embeddings into ChromaDB (`chroma` already in dependencies); replace flat-file cosine search in `search.py`
-3. **Conversation history** — `rag.py`'s `ask()` is stateless; add a message list to pass prior turns to `gpt-4o-mini`
-4. **Evaluation** — build a golden Q&A set and measure retrieval recall and answer quality
+1. **Conversation history** — `rag.py`'s `ask()` is stateless; add a message list to pass prior turns to `gpt-4o-mini`
+2. **Evaluation** — build a golden Q&A set and measure retrieval recall and answer quality
 
 ## Coding Conventions
 

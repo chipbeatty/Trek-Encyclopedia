@@ -158,8 +158,9 @@ def _split_into_scenes(transcript: str) -> list[dict]:
     [BRIDGE] or [CAPTAIN'S READY ROOM]. Falls back to a single scene.
     Returns list of {"location": str, "text": str}.
     """
-    # Pattern: line that is solely a bracketed label in all-caps / title case
-    scene_re = re.compile(r"^\[([A-Z][A-Z '\-]+)\]$", re.MULTILINE)
+    # Pattern: line that is solely a bracketed location label, e.g. [Bridge] or [Battle Bridge]
+    # Chakoteya uses Title Case, not ALL CAPS — [^\]]+ matches any non-closing-bracket chars
+    scene_re = re.compile(r"^\[([A-Z][^\]]*)\]$", re.MULTILINE)
     boundaries = [(m.start(), m.group(1)) for m in scene_re.finditer(transcript)]
 
     if not boundaries:
