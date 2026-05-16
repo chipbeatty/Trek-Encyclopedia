@@ -1,0 +1,102 @@
+[
+  {
+    "question": "Which episode has Q putting humanity on trial for the first time?",
+    "episode_ids": ["s01e01", "s01e02"]
+  },
+  {
+    "question": "In what episode is Tasha Yar killed by the creature Armus?",
+    "episode_ids": ["s01e23"]
+  },
+  {
+    "question": "Which episode features a court hearing to decide if Data is property of Starfleet or a person with rights?",
+    "episode_ids": ["s02e09"]
+  },
+  {
+    "question": "When does the Enterprise first encounter the Borg?",
+    "episode_ids": ["s02e16"]
+  },
+  {
+    "question": "Which episode has Picard assimilated by the Borg and turned into Locutus?",
+    "episode_ids": ["s03e26"]
+  },
+  {
+    "question": "In which episode does the Enterprise-C emerge from a temporal rift, changing history?",
+    "episode_ids": ["s03e15"]
+  },
+  {
+    "question": "What episode features Data building and raising an android child?",
+    "episode_ids": ["s03e16"]
+  },
+  {
+    "question": "Which episode involves Worf fighting to clear his family's name after his father is accused of treason at Khitomer?",
+    "episode_ids": ["s03e17"]
+  },
+  {
+    "question": "In what episode does the crew discover Barclay is addicted to the holodeck?",
+    "episode_ids": ["s03e21"]
+  },
+  {
+    "question": "Which episode has Picard mind-melding with Ambassador Sarek to contain his runaway emotions?",
+    "episode_ids": ["s03e23"]
+  },
+  {
+    "question": "Picard is captured and interrogated by a Cardassian who demands he admit there are five lights. Which episode?",
+    "episode_ids": ["s06e10", "s06e11"]
+  },
+  {
+    "question": "What episode has Troi losing her empathic sense completely?",
+    "episode_ids": ["s04e10"]
+  },
+  {
+    "question": "Which episode involves a witch hunt aboard the Enterprise led by an admiral investigating a conspiracy?",
+    "episode_ids": ["s04e21"]
+  },
+  {
+    "question": "In what episode is Geordi's VISOR used to brainwash him into becoming an assassin?",
+    "episode_ids": ["s04e24"]
+  },
+  {
+    "question": "Which episode has the Enterprise crew living through the same explosion over and over in a time loop?",
+    "episode_ids": ["s05e18"]
+  },
+  {
+    "question": "Picard is hit by an alien probe and lives an entire lifetime on a planet called Kataan. Which episode?",
+    "episode_ids": ["s05e25"]
+  },
+  {
+    "question": "Picard and crew speak only in metaphors to communicate with an alien captain. Which episode?",
+    "episode_ids": ["s05e02"]
+  },
+  {
+    "question": "In what episode is Scotty found alive after being suspended in a transporter buffer for 75 years?",
+    "episode_ids": ["s06e04"]
+  },
+  {
+    "question": "Which episode has a holodeck Professor Moriarty taking the crew hostage after gaining self-awareness?",
+    "episode_ids": ["s06e12"]
+  },
+  {
+    "question": "What episode gives Picard a second chance at life, letting him undo a near-fatal youthful brawl?",
+    "episode_ids": ["s06e15"]
+  },
+  {
+    "question": "Riker cannot tell what is real after being imprisoned in an alien mental institution. Which episode?",
+    "episode_ids": ["s06e21"]
+  },
+  {
+    "question": "Which episode has Data experiencing anger for the first time after a Borg encounter?",
+    "episode_ids": ["s06e26", "s07e01"]
+  },
+  {
+    "question": "What episode features the crew de-evolving into earlier animal life forms?",
+    "episode_ids": ["s07e19"]
+  },
+  {
+    "question": "In the series finale, Q puts humanity on trial again across multiple points in time. Which episode?",
+    "episode_ids": ["s07e25", "s07e26"]
+  },
+  {
+    "question": "Which episode has the Enterprise crew turned into children after a transporter accident?",
+    "episode_ids": ["s06e07"]
+  }
+]

@@ -11,4 +11,5 @@ wheels/
 
 embeddings.json
 .env
-data/
+data/*
+!data/golden_qa.json
