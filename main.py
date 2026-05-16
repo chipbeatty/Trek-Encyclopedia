@@ -10,6 +10,8 @@ def main():
     print("=" * 60)
     print("\nAsk me anything about TNG! (type 'quit' to exit)\n")
 
+    history: list[dict] = []
+
     while True:
         try:
             question = input("You: ").strip()
@@ -24,7 +26,8 @@ def main():
             print("\nLive long and prosper.")
             break
 
-        result = ask(question)
+        result = ask(question, history=history)
+        history = result["history"]
 
         print(f"\nTNG Bot: {result['answer']}")
         print("\nSources:")
