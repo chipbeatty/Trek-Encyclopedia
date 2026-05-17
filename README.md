@@ -8,14 +8,18 @@ RAG is easy to demo and hard to do well. I wanted to build one end-to-end on a d
 
 ## Architecture
 
-```
-TVMaze API ──► tng_episodes.csv ──┐
-                                   ├──► transcripts.json ──► chunks.json ──► ChromaDB (tng_transcripts)
-Chakoteya ───► transcripts.json ───┘                                     ──► ChromaDB (tng_synopses)
-                                                                                    │
-                                                              search.py ◄───────────┘
-                                                                  │
-                                                              rag.py ──► gpt-4o-mini ──► main.py
+```mermaid
+flowchart LR
+    A[TVMaze API] -->|episode metadata| C[tng_episodes.csv]
+    B[Chakoteya\ntranscripts] -->|raw HTML| D[transcripts.json]
+    C --> D
+    D -->|scene-aware chunking| E[chunks.json]
+    E -->|embed| F[(ChromaDB\ntng_transcripts\n6,894 chunks)]
+    D -->|synopsis embed| G[(ChromaDB\ntng_synopses\n178 episodes)]
+    F --> H[search.py]
+    G -->|guaranteed slots| H
+    H --> I[rag.py]
+    I -->|gpt-4o-mini| J[main.py\nCLI chatbot]
 ```
 
 Two ChromaDB collections serve different retrieval needs: `tng_transcripts` (6,894 scene-level chunks) handles dialogue-level queries; `tng_synopses` (178 episode synopses) handles concept-level queries where the right episode's transcript vocabulary doesn't overlap the query. Each question goes to both; synopsis matches get guaranteed slots in the result set regardless of chunk distance.
